@@ -1,25 +1,22 @@
-import { NoteTag } from "@/types/note";
-import css from "./SidebarNotes.module.css";
+// app/notes/filter/@sidebar/default.tsx
+import css from "./sidebar.module.css";
 
-import Link from "next/link";
+const TAGS = ["Work", "Meeting", "Shopping", "Home"] as const;
 
-export default function SidebarNotes() {
-  const sidebarOpt: (NoteTag | "All")[] = [
-    "All",
-    "Todo",
-    "Work",
-    "Personal",
-    "Meeting",
-    "Shopping",
-  ];
-
+export default function SidebarDefault() {
   return (
     <ul className={css.menuList}>
-      {sidebarOpt.map((tag) => (
-        <li key={tag} className={css.menuItem}>
-          <Link href={`/notes/filter/${tag}`} className={css.menuLink}>
-            {tag}
-          </Link>
+      <li className={css.menuItem}>
+        <a href="/notes/filter/all" className={css.menuLink}>
+          All notes
+        </a>
+      </li>
+
+      {TAGS.map((t) => (
+        <li key={t} className={css.menuItem}>
+          <a href={`/notes/filter/${t}`} className={css.menuLink}>
+            {t}
+          </a>
         </li>
       ))}
     </ul>

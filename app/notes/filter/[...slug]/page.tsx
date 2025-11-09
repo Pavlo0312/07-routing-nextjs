@@ -1,17 +1,33 @@
+// app/notes/filter/[...slug]/page.tsx
+import {
+  QueryClient,
+  dehydrate,
+  HydrationBoundary,
+} from "@tanstack/react-query";
 import { fetchNotes } from "@/lib/api";
 import NotesClient from "./Notes.client";
-import { NoteTag } from "@/types/note";
+import type { NoteTag } from "@/types/note";
 
-type NotesPageProps = {
-  params: Promise<{ slug: string[] }>;
-};
+type RouteParams = { slug?: string[] };
 
-export default async function NotesPage({ params }: NotesPageProps) {
-  const { slug } = await params;
+export default async function NotesPage({ params }: { params: RouteParams }) {
+  // беремо перший сегмент catch-all [...slug] як тег
+  const rawTag = params.slug?.[0];
+  // бекенд НЕ очікує 'all' → для 'all' тег не передаємо взагалі
+  const tag: NoteTag | undefined =
+    rawTag && rawTag.toLowerCase() !== "all" ? (rawTag as NoteTag) : undefined;
 
-  const tag = slug[0] === "All" ? undefined : (slug[0] as NoteTag);
+  const queryClient = new QueryClient();
 
-  const initialData = await fetchNotes("", 1, 12, tag);
+  await queryClient.prefetchQuery({
+    queryKey: ["notes", "", 1, tag ?? null],
+    // ВАЖЛИВО: позиційні аргументи (searchText, page, perPage?, tag?)
+    queryFn: () => fetchNotes("", 1, 12, tag),
+  });
 
-  return <NotesClient initialData={initialData} tag={tag} />;
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NotesClient tag={tag} />
+    </HydrationBoundary>
+  );
 }
